@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html, body {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+main {
+    overflow: scroll;
+}
+
+table {
+    width: 100%;
+}
+
+table td {
+    width: 50%;
+    background-color: lightgray;
+    text-align: center;
+    padding: 5px;
+    font-size: 1.5em;
+}
+
+nav {
+    min-height: 6em;
+    border-top: 2px solid black;
+    background: linear-gradient(to top, #ddd -10%, #aaa 100%);
+}
+
+nav:after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 6em;
+  height: 0.8em;
+  background: linear-gradient(to bottom, transparent 0%, gray 100%);
+}
+
+</style>
+<script type="text/javascript">
+let diceRolls = 0;
+const randomDice = count => {
+    const dice = [];
+    for (let i = 0; i < count; ++i) {
+        dice.push(Math.floor(Math.random() * 7));
+    }
+    diceRolls += count;
+    return dice;
+};
+
+const frequencies = dice => {
+    const freq = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0};
+    dice.forEach(v => ++freq[v]);
+    return freq;
+};
+
+const addFrequencies = (freq1, freq2) => {
+    return {
+        1: freq1[1] + freq2[1],
+        2: freq1[2] + freq2[2],
+        3: freq1[3] + freq2[3],
+        4: freq1[4] + freq2[4],
+        5: freq1[5] + freq2[5],
+        6: freq1[6] + freq2[6],
+    }
+}
+
+const winsAgainstFreq = (freq, count, number, special, exact) => {
+    let freqCount = freq[number];
+
+    if (!special && number !== 1) {
+        freqCount += freq[1];
+    }
+
+    return exact ? freqCount === count : freqCount >= count;
+}
+
+const makeTable = (ourDice, otherDiceCount, simCount, special) => {
+    const ourFreq = frequencies(ourDice);
+    const table = {};
+
+    for (let i = 0; i < simCount; ++i) {
+        const otherDice = randomDice(otherDiceCount);
+        const otherFreq = frequencies(otherDice);
+
+        const totalFreq = addFrequencies(ourFreq, otherFreq);
+        for (let count = 1; count <= 18; ++count) {
+            for (let number = 1; number <= 6; ++number) {
+                for (const exact of [true, false]) {
+                    const won = winsAgainstFreq(totalFreq, count, number, special, exact);
+                    const extra = won ? 1 : 0;
+                    const exact_suffix = exact ? 'e' : '';
+                    const k = `${count}_${number}${exact_suffix}`;
+                    table[k] = (table[k] ?? 0) + extra;
+                }
+            }
+        }
+    }
+
+    for (const k in table) {
+        table[k] /= simCount;
+    }
+
+    return table;
+};
+
+const main = () => {
+    const round = x => Math.round(x * 1000)/10;
+    const table = makeTable([], 30, 15000, false);
+    Object.keys(table).filter(k => !k.endsWith("e")).forEach(k => {
+        const [count, number] = k.split("_");
+        const nonExact = table[k] ?? 0;
+        const exact = table[`${k}e`] ?? 0;
+        k = k.replace("_", "");
+        const elem = document.getElementById(`${k}`);
+        if (elem === null) return;
+
+        const numberString = number === "1" ? "perudos" : `${number}`;
+        elem.innerHTML = `${count}x ${numberString}: ≥${round(nonExact)}% =${round(exact)}%`;
+    });
+};
+</script>
+</head>
+<body>
+<main>
+<table>
+    <tr>
+        <td colspan="2" id="11"></td>
+    </tr>
+    <tr>
+        <td id="12"></td>
+        <td id="22"></td>
+    </tr>
+    <tr>
+        <td id="13"></td>
+        <td id="23"></td>
+    </tr>
+    <tr>
+        <td id="14"></td>
+        <td id="24"></td>
+    </tr>
+    <tr>
+        <td id="15"></td>
+        <td id="25"></td>
+    </tr>
+    <tr>
+        <td id="16"></td>
+        <td id="26"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="21"></td>
+    </tr>
+    <tr>
+        <td id="32"></td>
+        <td id="42"></td>
+    </tr>
+    <tr>
+        <td id="33"></td>
+        <td id="43"></td>
+    </tr>
+    <tr>
+        <td id="34"></td>
+        <td id="44"></td>
+    </tr>
+    <tr>
+        <td id="35"></td>
+        <td id="45"></td>
+    </tr>
+    <tr>
+        <td id="36"></td>
+        <td id="46"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="31"></td>
+    </tr>
+    <tr>
+        <td id="52"></td>
+        <td id="62"></td>
+    </tr>
+    <tr>
+        <td id="53"></td>
+        <td id="63"></td>
+    </tr>
+    <tr>
+        <td id="54"></td>
+        <td id="64"></td>
+    </tr>
+    <tr>
+        <td id="55"></td>
+        <td id="65"></td>
+    </tr>
+    <tr>
+        <td id="56"></td>
+        <td id="66"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="41"></td>
+    </tr>
+    <tr>
+        <td id="72"></td>
+        <td id="82"></td>
+    </tr>
+    <tr>
+        <td id="73"></td>
+        <td id="83"></td>
+    </tr>
+    <tr>
+        <td id="74"></td>
+        <td id="84"></td>
+    </tr>
+    <tr>
+        <td id="75"></td>
+        <td id="85"></td>
+    </tr>
+    <tr>
+        <td id="76"></td>
+        <td id="86"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="51"></td>
+    </tr>
+    <tr>
+        <td id="92"></td>
+        <td id="102"></td>
+    </tr>
+    <tr>
+        <td id="93"></td>
+        <td id="103"></td>
+    </tr>
+    <tr>
+        <td id="94"></td>
+        <td id="104"></td>
+    </tr>
+    <tr>
+        <td id="95"></td>
+        <td id="105"></td>
+    </tr>
+    <tr>
+        <td id="96"></td>
+        <td id="106"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="61"></td>
+    </tr>
+    <tr>
+        <td id="112"></td>
+        <td id="122"></td>
+    </tr>
+    <tr>
+        <td id="113"></td>
+        <td id="123"></td>
+    </tr>
+    <tr>
+        <td id="114"></td>
+        <td id="124"></td>
+    </tr>
+    <tr>
+        <td id="115"></td>
+        <td id="125"></td>
+    </tr>
+    <tr>
+        <td id="116"></td>
+        <td id="126"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="71"></td>
+    </tr>
+    <tr>
+        <td id="132"></td>
+        <td id="142"></td>
+    </tr>
+    <tr>
+        <td id="133"></td>
+        <td id="143"></td>
+    </tr>
+    <tr>
+        <td id="134"></td>
+        <td id="144"></td>
+    </tr>
+    <tr>
+        <td id="135"></td>
+        <td id="145"></td>
+    </tr>
+    <tr>
+        <td id="136"></td>
+        <td id="146"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="81"></td>
+    </tr>
+    <tr>
+        <td id="152"></td>
+        <td id="162"></td>
+    </tr>
+    <tr>
+        <td id="153"></td>
+        <td id="163"></td>
+    </tr>
+    <tr>
+        <td id="154"></td>
+        <td id="164"></td>
+    </tr>
+    <tr>
+        <td id="155"></td>
+        <td id="165"></td>
+    </tr>
+    <tr>
+        <td id="156"></td>
+        <td id="166"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="91"></td>
+    </tr>
+    <tr>
+        <td id="172"></td>
+        <td id="182"></td>
+    </tr>
+    <tr>
+        <td id="173"></td>
+        <td id="183"></td>
+    </tr>
+    <tr>
+        <td id="174"></td>
+        <td id="184"></td>
+    </tr>
+    <tr>
+        <td id="175"></td>
+        <td id="185"></td>
+    </tr>
+    <tr>
+        <td id="176"></td>
+        <td id="186"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="101"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="111"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="121"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="131"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="141"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="151"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="161"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="171"></td>
+    </tr>
+    <tr>
+        <td colspan="2" id="181"></td>
+    </tr>
+</table>
+</main>
+<nav>
+hi
+</nav>
+<script>
+main();
+console.log(diceRolls);
+</script>
+</body>
+</html>
