@@ -169,7 +169,10 @@ const makeTable = (ourDice, otherDiceCount, simCount, special) => {
 };
 
 const drawTable = (table, simCount) => {
-    const round = x => Math.round(x * 1000)/10;
+    const round = x => {
+        const n = Math.round(x * 1000)/10;
+        return n.toFixed(1);
+    };
     let modified = false;
     Object.keys(table).filter(k => !k.endsWith("e")).forEach(k => {
         const [count, number] = k.split("_");
