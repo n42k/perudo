@@ -184,7 +184,7 @@ const drawTable = (table, simCount) => {
         const elem = document.getElementById(`${k}`);
         if (elem === null) return;
 
-        const numberString = number === "1" ? "perudos" : `${number}`;
+        const numberString = number === "1" ? " perudos" : `${number}`;
         const newInnerHTML = `${count}x${numberString} ${nonExact}${exact}`;
         if (elem.innerHTML !== newInnerHTML) {
             elem.innerHTML = newInnerHTML;
