@@ -102,6 +102,11 @@ nav > div > span {
 </style>
 <script type="text/javascript">
 let diceRolls = 0;
+let totalSimCount = 0;
+let lastModificationTotalSimCount = 0;
+let totalStartTime = 0;
+let totalTable = {};
+
 const randomDice = count => {
     const dice = [];
     for (let i = 0; i < count; ++i) {
@@ -160,30 +165,212 @@ const makeTable = (ourDice, otherDiceCount, simCount, special) => {
         }
     }
 
-    for (const k in table) {
-        table[k] /= simCount;
-    }
-
     return table;
 };
 
-const main = () => {
+const drawTable = (table, simCount) => {
     const round = x => Math.round(x * 1000)/10;
-    const table = makeTable([], 30, 15000, false);
+    let modified = false;
     Object.keys(table).filter(k => !k.endsWith("e")).forEach(k => {
         const [count, number] = k.split("_");
-        const nonExact = table[k] ?? 0;
-        const exact = table[`${k}e`] ?? 0;
+        const nonExact = `≥${round((table[k] ?? 0)/simCount)}%`;
+        const exact = `=${round((table[`${k}e`] ?? 0)/simCount)}%`;
         k = k.replace("_", "");
         const elem = document.getElementById(`${k}`);
         if (elem === null) return;
 
         const numberString = number === "1" ? "perudos" : `${number}`;
-        elem.innerHTML = `${count}x ${numberString}: ≥${round(nonExact)}% =${round(exact)}%`;
+        const newInnerHTML = `${count}x ${numberString}: ${nonExact} ${exact}`;
+        if (elem.innerHTML !== newInnerHTML) {
+            elem.innerHTML = newInnerHTML;
+            modified = true;
+        }
     });
+    return modified;
 };
 
-const renderButtons = () => {};
+const onFrame = () => {
+    // spend 1/4 of a frame to roll more dies until the last modification is 1M dies away
+    if (totalSimCount - lastModificationTotalSimCount > 100) {
+        window.requestAnimationFrame(onFrame);
+        return;
+    }
+
+    const myDice = Array(variables.die1).fill(1)
+        .concat(Array(variables.die2).fill(2))
+        .concat(Array(variables.die3).fill(3))
+        .concat(Array(variables.die4).fill(4))
+        .concat(Array(variables.die5).fill(5))
+        .concat(Array(variables.die6).fill(6));
+
+    const startTime = performance.now();
+    const endTime = startTime + frameRate/4;
+    while (performance.now() < endTime) {
+        const table = makeTable(myDice, variables.total, 101, variables.special_round);
+        totalSimCount += 101;
+        for (const k in table) {
+            totalTable[k] = (totalTable[k] ?? 0) + table[k];
+        }
+        const modified = drawTable(totalTable, totalSimCount);
+        if (modified) {
+            lastModificationTotalSimCount = totalSimCount;
+        } else {
+            lastModificationTotalSimCount = 0;
+        }
+    }
+
+
+    // add to stats
+    const stats = document.getElementById("stats");
+    if (stats !== null) {
+        const time = performance.now() - totalStartTime;
+        const totalDiceRollsK = Math.round((diceRolls + 750*Math.random())/1000);
+        const rollsPerSecondK = Math.round((diceRolls/time*1000)/1000);
+        const totalSimCountK = Math.round(totalSimCount/1000);
+        stats.innerHTML = `
+            Total dice rolls: ${totalDiceRollsK}k (${rollsPerSecondK}k/s)
+            <br>Total simulations: ${totalSimCountK}k`;
+    }
+
+    window.requestAnimationFrame(onFrame);
+}
+
+const renderButtons = () => {
+    const {
+        total,
+        die1,
+        die2,
+        die3,
+        die4,
+        die5,
+        die6,
+        special_round,
+    } = variables;
+
+    document.querySelectorAll("#total > span")
+        .forEach(span => span.innerHTML = `<big>∑</big>${total}`);
+    document.querySelectorAll("#die1 > span")
+        .forEach(span => span.innerHTML = `⚀${die1}`);
+    document.querySelectorAll("#die2 > span")
+        .forEach(span => span.innerHTML = `⚁${die2}`);
+    document.querySelectorAll("#die3 > span")
+        .forEach(span => span.innerHTML = `⚂${die3}`);
+    document.querySelectorAll("#die4 > span")
+        .forEach(span => span.innerHTML = `⚃${die4}`);
+    document.querySelectorAll("#die5 > span")
+        .forEach(span => span.innerHTML = `⚄${die5}`);
+    document.querySelectorAll("#die6 > span")
+        .forEach(span => span.innerHTML = `⚅${die6}`);
+    document.querySelectorAll("#special_round > button")
+        .forEach(button => button.innerHTML = special_round ? "☑" : "☐");
+};
+
+// change variables, max total is 30, max owned dice is 5 total between all 6
+const up = ([name]) => {
+    lastModificationTotalSimCount = 0;
+    totalTable = {};
+    lastModificationRolls = 0;
+    totalStartTime = performance.now();
+
+    if (name === "total") {
+        variables.total = Math.min(30, variables.total + 1);
+        return;
+    } else if(name === "special_round") {
+        variables.special_round = !variables.special_round;
+        return;
+    }
+
+    const {die1, die2, die3, die4, die5, die6} = variables;
+    const dice = [die1, die2, die3, die4, die5, die6];
+    const diceSum = dice.reduce((a, b) => a + b, 0);
+
+    if (diceSum >= 5) {
+        return;
+    }
+
+    if (name === "die1") {
+        variables.die1 = Math.min(5, variables.die1 + 1);
+    } else if (name === "die2") {
+        variables.die2 = Math.min(5, variables.die2 + 1);
+    } else if (name === "die3") {
+        variables.die3 = Math.min(5, variables.die3 + 1);
+    } else if (name === "die4") {
+        variables.die4 = Math.min(5, variables.die4 + 1);
+    } else if (name === "die5") {
+        variables.die5 = Math.min(5, variables.die5 + 1);
+    } else if (name === "die6") {
+        variables.die6 = Math.min(5, variables.die6 + 1);
+    }
+
+    renderButtons();
+};
+
+const down = ([name]) => {
+    totalSimCount = 0;
+    totalTable = {};
+    lastModificationTotalSimCount = 0;
+    totalStartTime = performance.now();
+
+    if (name === "total") {
+        variables.total = Math.max(0, variables.total - 1);
+    } else if(name === "special_round") {
+        variables.special_round = !variables.special_round;
+    }
+
+    if (name === "die1") {
+        variables.die1 = Math.max(0, variables.die1 - 1);
+    } else if (name === "die2") {
+        variables.die2 = Math.max(0, variables.die2 - 1);
+    } else if (name === "die3") {
+        variables.die3 = Math.max(0, variables.die3 - 1);
+    } else if (name === "die4") {
+        variables.die4 = Math.max(0, variables.die4 - 1);
+    } else if (name === "die5") {
+        variables.die5 = Math.max(0, variables.die5 - 1);
+    } else if (name === "die6") {
+        variables.die6 = Math.max(0, variables.die6 - 1);
+    }
+
+    renderButtons();
+};
+
+const variables = {
+    total: 30,
+    die1: 0,
+    die2: 0,
+    die3: 0,
+    die4: 0,
+    die5: 0,
+    die6: 0,
+    special_round: false,
+}
+
+let lastTime;
+let frameRate = 0;
+let frameTimes = [];
+
+// Get frame rate for 10 frames
+// Then calculate the average frame rate and call onFrame
+const getFrameRate = () => {
+    const now = performance.now();
+    const delta = now - lastTime;
+    lastTime = now;
+    frameTimes.push(delta);
+
+    if (frameTimes.length === 10) {
+        // first 4 frames are inaccurate, remove them
+        frameTimes.shift();
+        frameTimes.shift();
+        frameTimes.shift();
+        frameTimes.shift();
+        frameRate = frameTimes.reduce((a, b) => a + b, 0)/frameTimes.length;
+        totalStartTime = performance.now();
+        onFrame();
+    } else {
+        window.requestAnimationFrame(getFrameRate);
+    }
+};
+
 </script>
 </head>
 <body>
@@ -423,6 +610,12 @@ const renderButtons = () => {};
     <tr>
         <td colspan="2" id="181"></td>
     </tr>
+    <tr>
+        <td colspan="2">Made by Pedro Amaro</td>
+    </tr>
+    <tr>
+        <td colspan="2" id="stats"></td>
+    </tr>
 </table>
 </main>
 <nav>
@@ -469,7 +662,9 @@ const renderButtons = () => {};
 </nav>
 <script>
 renderButtons();
-main();
+drawTable(makeTable([], 30, 125, false), 125); // draw fake table
+lastTime = performance.now();
+window.requestAnimationFrame(getFrameRate);
 </script>
 </body>
 </html>
