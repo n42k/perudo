@@ -102,6 +102,7 @@ nav > div > span {
 </style>
 <script type="text/javascript">
 let diceRolls = 0;
+let totalDiceRolls = 0;
 let totalSimCount = 0;
 let lastModificationTotalSimCount = 0;
 let totalStartTime = 0;
@@ -110,9 +111,10 @@ let totalTable = {};
 const randomDice = count => {
     const dice = [];
     for (let i = 0; i < count; ++i) {
-        dice.push(Math.floor(Math.random() * 7));
+        dice.push(Math.floor(1 + Math.random() * 6));
     }
     diceRolls += count;
+    totalDiceRolls += count;
     return dice;
 };
 
@@ -194,7 +196,7 @@ const drawTable = (table, simCount) => {
 
 const onFrame = () => {
     // spend 1/4 of a frame to roll more dies until the last modification is 1M dies away
-    if (totalSimCount - lastModificationTotalSimCount > 100) {
+    if (totalSimCount - lastModificationTotalSimCount > 1000) {
         window.requestAnimationFrame(onFrame);
         return;
     }
@@ -209,30 +211,28 @@ const onFrame = () => {
     const startTime = performance.now();
     const endTime = startTime + frameRate/4;
     while (performance.now() < endTime) {
-        const table = makeTable(myDice, variables.total, 101, variables.special_round);
-        totalSimCount += 101;
+        const table = makeTable(myDice, variables.total, 250, variables.special_round);
+        totalSimCount += 250;
         for (const k in table) {
             totalTable[k] = (totalTable[k] ?? 0) + table[k];
         }
-        const modified = drawTable(totalTable, totalSimCount);
-        if (modified) {
-            lastModificationTotalSimCount = totalSimCount;
-        } else {
-            lastModificationTotalSimCount = 0;
-        }
     }
 
+    const modified = drawTable(totalTable, totalSimCount);
+    if (modified) {
+        lastModificationTotalSimCount = totalSimCount;
+    }
 
     // add to stats
     const stats = document.getElementById("stats");
     if (stats !== null) {
         const time = performance.now() - totalStartTime;
-        const totalDiceRollsK = Math.round((diceRolls + 750*Math.random())/1000);
+        const totalDiceRollsK = Math.round(totalDiceRolls/1000);
         const rollsPerSecondK = Math.round((diceRolls/time*1000)/1000);
-        const totalSimCountK = Math.round(totalSimCount/1000);
         stats.innerHTML = `
-            Total dice rolls: ${totalDiceRollsK}k (${rollsPerSecondK}k/s)
-            <br>Total simulations: ${totalSimCountK}k`;
+            Stats for nerds:<br>
+            Dice rolls: ${totalDiceRollsK}k (${rollsPerSecondK}k/s)
+        `;
     }
 
     window.requestAnimationFrame(onFrame);
@@ -270,13 +270,20 @@ const renderButtons = () => {
 
 // change variables, max total is 30, max owned dice is 5 total between all 6
 const up = ([name]) => {
-    lastModificationTotalSimCount = 0;
+    totalSimCount = 0;
     totalTable = {};
-    lastModificationRolls = 0;
+    lastModificationTotalSimCount = 0;
     totalStartTime = performance.now();
+    diceRolls = 0;
 
     if (name === "total") {
         variables.total = Math.min(30, variables.total + 1);
+        variables.die1 = 0;
+        variables.die2 = 0;
+        variables.die3 = 0;
+        variables.die4 = 0;
+        variables.die5 = 0;
+        variables.die6 = 0;
     } else if(name === "special_round") {
         variables.special_round = !variables.special_round;
     }
@@ -311,9 +318,16 @@ const down = ([name]) => {
     totalTable = {};
     lastModificationTotalSimCount = 0;
     totalStartTime = performance.now();
+    diceRolls = 0;
 
     if (name === "total") {
         variables.total = Math.max(0, variables.total - 1);
+        variables.die1 = 0;
+        variables.die2 = 0;
+        variables.die3 = 0;
+        variables.die4 = 0;
+        variables.die5 = 0;
+        variables.die6 = 0;
     } else if(name === "special_round") {
         variables.special_round = !variables.special_round;
     }
