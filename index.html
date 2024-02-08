@@ -2,6 +2,12 @@
 <html>
 <head>
 <style>
+* {
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
 html, body {
     position: absolute;
     top: 0;
@@ -22,6 +28,15 @@ main {
     overflow: scroll;
 }
 
+main {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+main::-webkit-scrollbar { 
+    display: none;
+}
+
 table {
     width: 100%;
 }
@@ -35,19 +50,52 @@ table td {
 }
 
 nav {
-    min-height: 6em;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    min-height: 7rem;
     border-top: 2px solid black;
     background: linear-gradient(to top, #ddd -10%, #aaa 100%);
+    align-items: stretch;
+    align-content: stretch;
+    flex-grow: 1;
+    text-align: center;
+    line-height: -1rem;
 }
 
 nav:after {
-  content: '';
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 6em;
-  height: 0.8em;
-  background: linear-gradient(to bottom, transparent 0%, gray 100%);
+    content: '';
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 7em;
+    height: 0.8em;
+    background: linear-gradient(to bottom, transparent 0%, gray 100%);
+}
+
+nav > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-content: stretch;
+    align-items: stretch;
+    flex-grow: 1;
+}
+
+nav > div > button {
+    background-color: #0000;
+    border: 0;
+    padding: 0px;
+    margin: 0px;
+    line-height: 0;
+    font-size: 2rem;
+}
+
+nav > div > span {
+    padding: 0px;
+    margin: 0px;
+    line-height: 0;
+    font-size: 2rem;
 }
 
 </style>
@@ -133,6 +181,8 @@ const main = () => {
         elem.innerHTML = `${count}x ${numberString}: ≥${round(nonExact)}% =${round(exact)}%`;
     });
 };
+
+const renderButtons = () => {};
 </script>
 </head>
 <body>
@@ -375,11 +425,50 @@ const main = () => {
 </table>
 </main>
 <nav>
-hi
+    <div id="total">
+        <button onclick="up`total`">˄</button>
+        <span><big>∑</big>30</span>
+        <button onclick="down`total`">˅</button>
+    </div>
+    <div id="die1">
+        <button onclick="up`die1`">˄</button>
+        <span>⚀0</span>
+        <button onclick="down`die1`">˅</button>
+    </div>
+    <div id="die2">
+        <button onclick="up`die2`">˄</button>
+        <span>⚁0</span>
+        <button onclick="down`die2`">˅</button>
+    </div>
+    <div id="die3">
+        <button onclick="up`die3`">˄</button>
+        <span>⚂0</span>
+        <button onclick="down`die3`">˅</button>
+    </div>
+    <div id="die4">
+        <button onclick="up`die4`">˄</button>
+        <span>⚃0</span>
+        <button onclick="down`die4`">˅</button>
+    </div>
+    <div id="die5">
+        <button onclick="up`die5`">˄</button>
+        <span>⚄0</span>
+        <button onclick="down`die5`">˅</button>
+    </div>
+    <div id="die6">
+        <button onclick="up`die6`">˄</button>
+        <span>⚅0</span>
+        <button onclick="down`die6`">˅</button>
+    </div>
+    <div id="special_round">
+        <span>Special</span>
+        <button onclick="up`special_round`">𐄂</button>
+        <span>Round</span>
+    </div>
 </nav>
 <script>
+renderButtons();
 main();
-console.log(diceRolls);
 </script>
 </body>
 </html>
