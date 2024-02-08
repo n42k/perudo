@@ -277,10 +277,8 @@ const up = ([name]) => {
 
     if (name === "total") {
         variables.total = Math.min(30, variables.total + 1);
-        return;
     } else if(name === "special_round") {
         variables.special_round = !variables.special_round;
-        return;
     }
 
     const {die1, die2, die3, die4, die5, die6} = variables;
