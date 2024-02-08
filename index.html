@@ -265,7 +265,7 @@ const renderButtons = () => {
     document.querySelectorAll("#die6 > span")
         .forEach(span => span.innerHTML = `⚅${die6}`);
     document.querySelectorAll("#special_round > button")
-        .forEach(button => button.innerHTML = special_round ? "☑" : "☐");
+        .forEach(button => button.innerHTML = variables.special_round ? "☑" : "☐");
 };
 
 // change variables, max total is 30, max owned dice is 5 total between all 6
