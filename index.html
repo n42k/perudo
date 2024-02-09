@@ -107,6 +107,7 @@ let totalSimCount = 0;
 let lastModificationTotalSimCount = 0;
 let totalStartTime = 0;
 let totalTable = {};
+let timeSpentMs = 0;
 
 const randomDice = count => {
     const dice = [];
@@ -172,8 +173,8 @@ const makeTable = (ourDice, otherDiceCount, simCount, special) => {
 
 const drawTable = (table, simCount) => {
     const round = x => {
-        const n = Math.round(x * 1000)/10;
-        return n.toFixed(1);
+        const n = Math.round(x * 100);
+        return n.toFixed(0);
     };
     let modified = false;
     Object.keys(table).filter(k => !k.endsWith("e")).forEach(k => {
@@ -218,6 +219,8 @@ const onFrame = () => {
         }
     }
 
+    timeSpentMs += performance.now() - startTime;
+
     const modified = drawTable(totalTable, totalSimCount);
     if (modified) {
         lastModificationTotalSimCount = totalSimCount;
@@ -229,9 +232,11 @@ const onFrame = () => {
         const time = performance.now() - totalStartTime;
         const totalDiceRollsK = Math.round(totalDiceRolls/1000);
         const rollsPerSecondK = Math.round((diceRolls/time*1000)/1000);
+        const timeSpentS = Math.round(timeSpentMs/1000);
         stats.innerHTML = `
             Stats for nerds:<br>
-            Dice rolls: ${totalDiceRollsK}k (${rollsPerSecondK}k/s)
+            Dice rolls: ${totalDiceRollsK}k (${rollsPerSecondK}k/s)<br>
+            Time spent rolling: ${timeSpentS}s
         `;
     }
 
@@ -284,8 +289,12 @@ const up = ([name]) => {
         variables.die4 = 0;
         variables.die5 = 0;
         variables.die6 = 0;
+        renderButtons();
+        return;
     } else if(name === "special_round") {
         variables.special_round = !variables.special_round;
+        renderButtons();
+        return;
     }
 
     const {die1, die2, die3, die4, die5, die6} = variables;
@@ -328,8 +337,12 @@ const down = ([name]) => {
         variables.die4 = 0;
         variables.die5 = 0;
         variables.die6 = 0;
+        renderButtons();
+        return;
     } else if(name === "special_round") {
         variables.special_round = !variables.special_round;
+        renderButtons();
+        return;
     }
 
     if (name === "die1") {
